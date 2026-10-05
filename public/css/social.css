@@ -1,0 +1,157 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+}
+
+/* TOP NAVIGATION BAR */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1f1f1f;
+    color: white;
+    padding: 12px 30px;
+}
+
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-links a {
+    color: #ccc;
+    text-decoration: none;
+}
+
+.nav-links a.active,
+.nav-links a:hover {
+    color: white;
+    font-weight: bold;
+}
+
+#logoutButton {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#logoutButton:hover {
+    background-color: #0056b3;
+}
+
+/* PAGE LAYOUT: main column + sidebar */
+.page {
+    display: flex;
+    gap: 20px;
+    width: 80%;
+    margin: 20px auto;
+}
+
+.main-column {
+    flex: 3;
+}
+
+.sidebar {
+    flex: 1;
+}
+
+.card {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+/* WRITE A REVIEW */
+.card input[type="text"],
+.card textarea,
+.card select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.card textarea {
+    height: 80px;
+}
+
+.post-options {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.post-options select {
+    width: auto;
+    margin: 0;
+}
+
+button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #28a745;
+    color: white;
+}
+
+button:disabled {
+    background-color: #9bbfa3;
+}
+
+/* REVIEW FEED */
+.review {
+    border-bottom: 1px solid #ddd;
+    padding: 15px 0;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.badge {
+    background-color: #eee;
+    border-radius: 10px;
+    padding: 2px 10px;
+    font-size: 12px;
+}
+
+.review-movie {
+    color: #666;
+    margin-top: 5px;
+}
+
+.review-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* GROUPS SIDEBAR */
+.group-list {
+    padding-left: 20px;
+}
+
+/* SMALL SCREENS: stack the sidebar under the feed */
+@media (max-width: 800px) {
+    .page {
+        flex-direction: column;
+        width: 95%;
+    }
+}

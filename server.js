@@ -25,6 +25,11 @@ app.get('/', (req, res) => {
 app.get('/dashboard', (req, res) => {
     res.sendFile(__dirname + '/public/dashboard.html');
 });
+
+// Route to serve social.html
+app.get('/social', (req, res) => {
+    res.sendFile(__dirname + '/public/social.html');
+});
 //////////////////////////////////////
 //END ROUTES TO SERVE HTML FILES
 //////////////////////////////////////

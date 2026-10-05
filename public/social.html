@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieBox - Social</title>
+    <link rel="stylesheet" href="/css/social.css">
+</head>
+<body>
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="navbar">
+        <div class="logo">MovieBox</div>
+        <div class="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/social" class="active">Social</a>
+            <button id="logoutButton">Log Out</button>
+        </div>
+    </nav>
+
+    <div class="page">
+        <!-- MAIN COLUMN: write a review + review feed -->
+        <main class="main-column">
+
+            <!-- WRITE A REVIEW (placeholder - not functional yet) -->
+            <section class="card">
+                <h2>Write a Review</h2>
+                <input type="text" placeholder="Movie title" disabled>
+                <select disabled>
+                    <option>Rating: 5 stars</option>
+                </select>
+                <textarea placeholder="What did you think?" disabled></textarea>
+                <div class="post-options">
+                    <label>Visibility:
+                        <select disabled>
+                            <option>Public</option>
+                            <option>Private</option>
+                            <option>Group</option>
+                        </select>
+                    </label>
+                    <label><input type="checkbox" disabled> Post anonymously</label>
+                    <button disabled>Post</button>
+                </div>
+            </section>
+
+            <!-- REVIEW FEED (sample posts - will come from the database later) -->
+            <section class="card">
+                <h2>Review Feed</h2>
+                <div id="reviewFeed">
+                    <div class="review">
+                        <div class="review-header">
+                            <strong>Sample User</strong>
+                            <span class="badge">Public</span>
+                        </div>
+                        <div class="review-movie">Sample Movie &middot; ★★★★☆</div>
+                        <p>Review text will appear here.</p>
+                        <div class="review-actions">
+                            <button disabled>Like</button>
+                            <button disabled>Comment</button>
+                            <button disabled>Share</button>
+                        </div>
+                    </div>
+                    <div class="review">
+                        <div class="review-header">
+                            <strong>Anonymous</strong>
+                            <span class="badge">Group: Movie Night</span>
+                        </div>
+                        <div class="review-movie">Another Movie &middot; ★★★☆☆</div>
+                        <p>Review text will appear here.</p>
+                        <div class="review-actions">
+                            <button disabled>Like</button>
+                            <button disabled>Comment</button>
+                            <button disabled>Share</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- SIDEBAR: groups (placeholder) -->
+        <aside class="sidebar">
+            <section class="card">
+                <h2>My Groups</h2>
+                <ul class="group-list">
+                    <li>Movie Night</li>
+                    <li>Horror Fans</li>
+                </ul>
+                <button disabled>+ Create Group</button>
+            </section>
+        </aside>
+    </div>
+
+    <script src="/js/datamodel.js"></script>
+    <script src="/js/social.js"></script>
+</body>
+</html>
