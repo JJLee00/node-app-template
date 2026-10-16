@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieBox | Movie Theaters</title>
+    <link rel="stylesheet" href="/css/movie-theaters.css">
+
+    <script>
+        if (!localStorage.getItem('jwtToken')) {
+            window.location.replace('/logon.html');
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+    <header class="navbar">
+        <h1 class="logo">MovieBox</h1>
+
+        <nav>
+            <a href="dashboard.html">Home</a>
+            <a href="searchpage.html">Search</a>
+            <a href="movie-theaters.html" class="active">Theaters</a>
+            <a href="#">Profile</a>
+        </nav>
+    </header>
+
+    <!-- Main Theater Page -->
+    <main class="theater-container">
+
+        <h2>Find Movie Theaters</h2>
+        <p class="subtitle">
+            Discover theaters near you and explore available showtimes.
+        </p>
+
+        <!-- Theater Search -->
+        <div class="search-box">
+            <input
+                type="text"
+                id="theaterSearch"
+                placeholder="Enter city, ZIP code, or theater name..."
+            >
+
+            <button id="searchButton">Search</button>
+        </div>
+
+        <!-- Theater Filters -->
+        <div class="filters">
+            <select id="distanceFilter">
+                <option value="">All Distances</option>
+                <option value="5">Within 5 Miles</option>
+                <option value="10">Within 10 Miles</option>
+                <option value="25">Within 25 Miles</option>
+                <option value="50">Within 50 Miles</option>
+            </select>
+
+            <select id="theaterTypeFilter">
+                <option value="">All Theater Types</option>
+                <option value="standard">Standard</option>
+                <option value="imax">IMAX</option>
+                <option value="dolby">Dolby Cinema</option>
+            </select>
+        </div>
+
+        <!-- Theater Results -->
+        <section class="results-section">
+
+            <h2>Nearby Theaters</h2>
+
+            <div class="theater-grid">
+
+                <!-- Theater 1 -->
+                <div class="theater-card">
+                    <div class="theater-image">
+                        Theater Image
+                    </div>
+
+                    <h3>AMC Movie Theater</h3>
+                    <p>Tempe, Arizona</p>
+                    <p>Standard • IMAX • Dolby Cinema</p>
+
+                    <button class="showtimes-button">
+                        View Showtimes
+                    </button>
+                </div>
+
+                <!-- Theater 2 -->
+                <div class="theater-card">
+                    <div class="theater-image">
+                        Theater Image
+                    </div>
+
+                    <h3>Harkins Theatres</h3>
+                    <p>Tempe, Arizona</p>
+                    <p>Standard • Luxury Seating</p>
+
+                    <button class="showtimes-button">
+                        View Showtimes
+                    </button>
+                </div>
+
+                <!-- Theater 3 -->
+                <div class="theater-card">
+                    <div class="theater-image">
+                        Theater Image
+                    </div>
+
+                    <h3>Regal Cinemas</h3>
+                    <p>Phoenix, Arizona</p>
+                    <p>Standard • IMAX</p>
+
+                    <button class="showtimes-button">
+                        View Showtimes
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="/js/movie-theaters.js"></script>
+
+</body>
+</html>
