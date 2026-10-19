@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+{% block title %}Settings · MovieBox{% endblock %}
+{% block page_id %}settings{% endblock %}
+{% block shell_class %}app-shell--settings{% endblock %}
+{% block content %}
+<div class="settings-heading"><p class="eyebrow">Preferences</p><h1>Settings</h1><p>Manage your account and MovieBox experience.</p></div>
+<section class="card settings-card"><div class="section-heading"><h2>Appearance</h2></div><p>Choose how MovieBox looks on this device.</p><div class="theme-options">
+  <button class="theme-option" type="button" data-theme-option="dark"><span><svg class="icon"><use href="#icon-moon"/></svg></span><span><strong>Dark mode</strong><small>Easy on the eyes</small></span></button>
+  <button class="theme-option" type="button" data-theme-option="light"><span><svg class="icon"><use href="#icon-sun"/></svg></span><span><strong>Light mode</strong><small>Bright and clear</small></span></button>
+</div></section>
+<section class="card settings-card"><div class="section-heading"><h2>Basic settings</h2></div><div class="setting-list">
+  <div class="setting-row"><svg class="icon accent"><use href="#icon-globe"/></svg><div><strong>Language</strong><span>Choose your display language</span></div><select name="language" aria-label="Language">{% for code, label in languages|default([['en','English'],['es','Spanish'],['fr','French']], true) %}<option value="{{ code }}" {{ 'selected' if code == selected_language|default('en') else '' }}>{{ label }}</option>{% endfor %}</select></div>
+  <div class="setting-row"><svg class="icon accent"><use href="#icon-bell"/></svg><div><strong>Email updates</strong><span>New releases, replies, and group activity</span></div><button class="toggle is-on" type="button" role="switch" aria-checked="true" data-toggle><span></span></button></div>
+  <div class="setting-row"><svg class="icon accent"><use href="#icon-lock"/></svg><div><strong>Private profile</strong><span>Only approved followers can see your activity</span></div><button class="toggle" type="button" role="switch" aria-checked="false" data-toggle><span></span></button></div>
+</div></section>
+{% endblock %}

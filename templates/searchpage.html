@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set active_page = "search" %}
+{% block title %}Search movies · MovieBox{% endblock %}
+{% block page_id %}search{% endblock %}
+{% block shell_class %}app-shell--single{% endblock %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">Discover</p><h1>Search movies</h1><p>Find new favorites by title, genre, rating, or release year.</p></div>
+<section class="card search-controls"><div class="search-bar"><div class="input-icon"><svg class="icon"><use href="#icon-search"/></svg><input id="searchInput" type="search" placeholder="Search movies, actors, directors..." aria-label="Search movies"></div><button class="button button--primary" id="searchButton" type="button">Search</button></div><div class="filter-grid"><select id="genreFilter"><option>All Genres</option><option>Adventure</option><option>Thriller</option><option>Drama</option><option>Sci-Fi</option><option>Horror</option></select><select id="ratingFilter"><option>All Ratings</option><option value="8">8+ Rating</option><option value="7">7+ Rating</option></select><select id="yearFilter"><option>All Years</option><option>2026</option><option>2025</option><option>2024</option></select></div></section>
+<div class="panel-heading results-heading"><h2>Search results</h2><span id="resultCount">6 movies</span></div>
+<div class="movie-grid" id="movieGrid">
+{% set movies = movies|default([
+ {'title':'The Wild Horizon','year':'2026','genre':'Adventure','score':8.5,'image':'https://images.unsplash.com/photo-1597434002293-fc9bb06371d8?auto=format&fit=crop&w=600&q=85'},
+ {'title':'Into the Mist','year':'2025','genre':'Thriller','score':7.9,'image':'https://images.unsplash.com/photo-1718061474357-1511b1934a17?auto=format&fit=crop&w=600&q=85'},
+ {'title':'Where Rivers Sleep','year':'2024','genre':'Drama','score':8.2,'image':'https://images.unsplash.com/photo-1475070929565-c985b496cb9f?auto=format&fit=crop&w=600&q=85'},
+ {'title':'Northern Light','year':'2025','genre':'Sci-Fi','score':8.8,'image':'https://images.unsplash.com/photo-1618285545010-a44e4ffcd45b?auto=format&fit=crop&w=600&q=85'},
+ {'title':'The Silent Pines','year':'2024','genre':'Horror','score':7.6,'image':'https://images.unsplash.com/photo-1661124280301-ca0e33ceb438?auto=format&fit=crop&w=600&q=85'},
+ {'title':'Above the Clouds','year':'2026','genre':'Drama','score':8.1,'image':'https://images.unsplash.com/photo-1628015893843-5f7f6f6ccb01?auto=format&fit=crop&w=600&q=85'}
+], true) %}
+{% for movie in movies %}<article class="movie-card" data-title="{{ movie.title|lower }}" data-genre="{{ movie.genre }}" data-rating="{{ movie.score }}" data-year="{{ movie.year }}"><div class="movie-card__image"><img src="{{ movie.image }}" alt=""><button class="save-movie" type="button" aria-label="Add {{ movie.title }} to watchlist"><svg class="icon icon--small"><use href="#icon-plus"/></svg></button><span class="movie-score"><svg class="icon icon--tiny icon--fill"><use href="#icon-star"/></svg>{{ movie.score }}</span></div><div class="movie-card__body"><h3>{{ movie.title }}</h3><p>{{ movie.year }} · {{ movie.genre }}</p></div></article>{% endfor %}
+</div><div class="empty-state" id="emptyResults" hidden><svg class="icon"><use href="#icon-search"/></svg><strong>No movies found</strong><span>Try adjusting your search or filters.</span></div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/searchpage.js" defer></script>{% endblock %}

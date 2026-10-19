@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark light">
+  <title>Log in · MovieBox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css"><link rel="stylesheet" href="/static/css/logon.css">
+</head>
+<body class="public-page">
+  <header class="public-header"><div class="public-header__inner"><a class="brand" href="/"><span class="brand__mark">▶</span><span>MovieBox</span></a><nav class="public-nav"><a href="/">Discover</a><a href="/">Community</a><a href="/">Theatres</a></nav><a class="button button--primary" href="/logon">Log in</a></div></header>
+  <main class="auth-page"><section class="auth-card">
+    <div class="auth-art"><img src="https://images.unsplash.com/photo-1661124280301-ca0e33ceb438?auto=format&fit=crop&w=900&q=90" alt=""><div><p class="eyebrow">Welcome to MovieBox</p><h2>Keep every great movie—and every great conversation—close.</h2></div></div>
+    <div class="auth-form"><a class="back-link" href="/">← Back to home</a><p class="eyebrow" data-auth-eyebrow>Welcome back</p><h1 data-auth-title>Log in to MovieBox</h1><p data-auth-copy>Your watchlist has been waiting.</p>
+      <div class="auth-tabs"><button class="is-active" type="button" data-auth-tab="login">Log in</button><button type="button" data-auth-tab="create">Create account</button></div>
+      <form id="logon-form" class="auth-form" data-auth-form="login"><label>Email address<input name="email" type="email" placeholder="you@example.com" required></label><label>Password<span class="password-field"><input name="password" type="password" placeholder="At least 6 characters" minlength="6" required><button type="button" data-password-toggle>Show</button></span></label><div class="auth-options"><label><input type="checkbox"> Remember me</label><button type="button">Forgot password?</button></div><button class="button button--primary button--full button--large" type="submit">Log in →</button></form>
+      <form id="create-account-form" class="auth-form" data-auth-form="create" hidden><label>Display name<input name="displayName" type="text" placeholder="Alex Morgan" required></label><label>Email address<input name="email" type="email" placeholder="you@example.com" required></label><label>Password<span class="password-field"><input name="password" type="password" placeholder="At least 6 characters" minlength="6" required><button type="button" data-password-toggle>Show</button></span></label><button class="button button--primary button--full button--large" type="submit">Create account →</button></form>
+      <p class="message" id="message" role="status"></p><p class="auth-switch" data-auth-switch>New to MovieBox? <button type="button" data-auth-tab="create">Create an account</button></p>
+    </div>
+  </section></main>
+  <script src="/static/js/logon.js" defer></script>
+</body></html>

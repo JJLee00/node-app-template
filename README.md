@@ -1,22 +1,34 @@
-# Simple node.js restful api template app
-This is a simple template to get you started creating a web app with a restful api backend that connects to a mySQL database.
+# MovieBox - Node / Express / Nunjucks
 
-## Setup
-- open a terminal window and run: npm install
-- rename .env.example to .env and replace the placeholder values with your database credentials and a key of your choosing (share this information with your team so they can use the same credentials and key)
-- use mySQL Workbench to execute the DDL query found in the user_table_ddl.sql file against your database in order to create the user table needed for the template to run properly
-- run the template app from the terminal with: npm run dev
-- navigate to http://localhost:3000 to play with the app!
+Server-rendered MovieBox application integrated from the latest Figma React export.
 
-## Basic Architecture
-- **server.js:** back-end routes that talk to the database.
-- **public/js/datamodel.js:** "model" that is responsible for sending data back and forth between the interface and the server, and for storing and managing data and state on the front end.
-- **public/dashboard.html:** "view" that represents what the user sees and interacts with in the browser.
-- **public/js/dashboard.js:** "controller" that responds to user interactions with the view, works with the model to send and receive data accordingly, and manipulates the DOM to change what the user sees in the view as a result.
+## Run locally
 
-The files listed above are commented fairly extensively and organized with purpose.  The intent is for you to be able to use the existing code as a reference, and easily understand how to add your own code in the right places in order to create new features and therefore build your own app.
+```bash
+npm install
+npm run dev
+```
 
-## Features
--MVC pattern for well-organized code
--Salted and hashed password management
--JWT tokens for secure authorization
+Open `http://localhost:3000`.
+
+## Page routes
+
+- `/` - public MovieBox landing page
+- `/logon` - login/create-account page
+- `/dashboard` - authenticated profile/dashboard design
+- `/searchpage` - movie search
+- `/social` - community review feed
+- `/theatres` - theatre discovery
+- `/settings` - account/preferences
+
+## Structure
+
+- `server.js` - Express setup, API endpoints, and page routes
+- `templates/` - Nunjucks server-rendered HTML
+- `templates/base.html` - shared authenticated application shell/navigation
+- `static/css/` - global styles plus login-specific styles
+- `static/js/` - framework-free browser interactions
+
+Sample movie, review, theatre, and profile content is intentionally kept as template fallback data. Pass real data through `res.render()` as APIs/database services are connected.
+
+Keep new API and page routes above the final 404/error handlers in `server.js`.
