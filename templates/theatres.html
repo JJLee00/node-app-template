@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% set active_page = "theatres" %}
+{% block title %}Find a theatre · MovieBox{% endblock %}
+{% block page_id %}theatres{% endblock %}
+{% block shell_class %}app-shell--single{% endblock %}
+{% block content %}
+<div class="page-heading"><p class="eyebrow">Near you</p><h1>Find a theatre</h1><p>Discover nearby cinemas, compare amenities, and choose a showtime.</p></div>
+<section class="card theatre-controls"><div class="input-icon"><svg class="icon"><use href="#icon-pin"/></svg><input id="theatreLocation" value="{{ location|default('Brooklyn, NY') }}" aria-label="Location"></div><select aria-label="Date"><option>Today</option><option>Tomorrow</option><option>Saturday</option></select><button class="button button--primary" type="button">Search</button></section>
+<div class="map-surface"><span class="map-pin map-pin--one">1</span><span class="map-pin map-pin--two">2</span><span class="map-pin map-pin--three">3</span><div class="map-label">Showing theatres near <strong id="mapLocation">{{ location|default('Brooklyn, NY') }}</strong></div></div>
+<div class="panel-heading results-heading"><h2>Nearby theatres</h2><span>3 locations</span></div>
+<div class="theatre-list">
+{% set theatres = theatres|default([
+ {'name':'Alamo Drafthouse Downtown','distance':'0.8 mi','address':'445 Albee Square W','amenities':['Recliners','Food service','Dolby'],'times':['4:30 PM','7:15 PM','9:50 PM']},
+ {'name':'Nitehawk Cinema','distance':'1.6 mi','address':'136 Metropolitan Ave','amenities':['Dine-in','Bar','Indie'],'times':['5:10 PM','8:00 PM','10:30 PM']},
+ {'name':'BAM Rose Cinemas','distance':'1.9 mi','address':'30 Lafayette Ave','amenities':['Accessible','Art house','70mm'],'times':['3:45 PM','6:40 PM','9:20 PM']}
+], true) %}
+{% for theatre in theatres %}<article class="theatre-card"><div class="theatre-card__top"><div><h3>{{ theatre.name }}</h3><p>{{ theatre.address }}</p></div><span>{{ theatre.distance }}</span></div><div class="amenities">{% for amenity in theatre.amenities %}<span>{{ amenity }}</span>{% endfor %}</div><div class="showtimes"><span>Today</span>{% for time in theatre.times %}<button type="button" data-showtime>{{ time }}</button>{% endfor %}</div></article>{% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/theatres.js" defer></script>{% endblock %}

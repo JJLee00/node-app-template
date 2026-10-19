@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="{{ lang|default('en') }}" data-theme="{{ theme|default('dark') }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>{% block title %}MovieBox{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+  {% block head %}{% endblock %}
+</head>
+<body data-page="{% block page_id %}base{% endblock %}">
+  {% set user = user|default({'name':'Alex Morgan','username':'alexmorgan','initials':'AM'}, true) %}
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></symbol>
+    <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+    <symbol id="icon-star" viewBox="0 0 24 24"><path d="m12 2 3 6 6.5 1-4.7 4.6 1.1 6.4-5.9-3.1L6.1 20l1.1-6.4L2.5 9 9 8l3-6Z"/></symbol>
+    <symbol id="icon-heart" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z"/></symbol>
+    <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="icon-message" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m9 7 8 5-8 5V7Z"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14M14 7l5 5-5 5"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></symbol>
+    <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="icon-ticket" viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 0 0 6v3h20v-3a3 3 0 0 1 0-6V6H2v3Z"/><path d="M13 6v2M13 11v2M13 16v2"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></symbol>
+    <symbol id="icon-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="icon-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
+    <symbol id="icon-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+  </svg>
+
+  <header class="mobile-header">
+    <div class="mobile-header__inner">
+      <a class="brand" href="/" aria-label="MovieBox home"><span class="brand__mark"><svg class="icon icon--fill"><use href="#icon-play"/></svg></span><span>MovieBox</span></a>
+      <button class="icon-button" type="button" data-mobile-menu-toggle aria-controls="mobile-nav" aria-expanded="false" aria-label="Toggle navigation"><svg class="icon"><use href="#icon-menu"/></svg></button>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+      <a class="nav-item {{ 'is-active' if active_page|default('dashboard') == 'dashboard' else '' }}" href="/dashboard"><svg class="icon"><use href="#icon-home"/></svg>Home</a>
+      <a class="nav-item {{ 'is-active' if active_page == 'search' else '' }}" href="/searchpage"><svg class="icon"><use href="#icon-search"/></svg>Search movies</a>
+      <a class="nav-item {{ 'is-active' if active_page == 'social' else '' }}" href="/social"><svg class="icon"><use href="#icon-users"/></svg>View socials</a>
+      <a class="nav-item {{ 'is-active' if active_page == 'theatres' else '' }}" href="/theatres"><svg class="icon"><use href="#icon-pin"/></svg>Search theatres</a>
+      <a class="nav-item {{ 'is-active' if active_page|default('home') == 'settings' else '' }}" href="/settings"><svg class="icon"><use href="#icon-settings"/></svg>Settings</a>
+    </nav>
+  </header>
+
+  <div class="app-shell {% block shell_class %}{% endblock %}">
+    <aside class="sidebar">
+      <a class="brand sidebar__brand" href="/dashboard"><span class="brand__mark"><svg class="icon icon--fill"><use href="#icon-play"/></svg></span><span>MovieBox</span></a>
+      <p class="sidebar__label">Explore</p>
+      <nav class="sidebar__nav" aria-label="Primary navigation">
+        <a class="nav-item {{ 'is-active' if active_page|default('dashboard') == 'dashboard' else '' }}" href="/dashboard"><svg class="icon"><use href="#icon-home"/></svg>Home</a>
+        <a class="nav-item {{ 'is-active' if active_page == 'search' else '' }}" href="/searchpage"><svg class="icon"><use href="#icon-search"/></svg>Search movies</a>
+        <a class="nav-item {{ 'is-active' if active_page == 'social' else '' }}" href="/social"><svg class="icon"><use href="#icon-users"/></svg>View socials</a>
+        <a class="nav-item {{ 'is-active' if active_page == 'theatres' else '' }}" href="/theatres"><svg class="icon"><use href="#icon-pin"/></svg>Search theatres</a>
+        <a class="nav-item {{ 'is-active' if active_page|default('home') == 'settings' else '' }}" href="/settings"><svg class="icon"><use href="#icon-settings"/></svg>Settings</a>
+      </nav>
+      <div class="user-card">
+        <div class="user-card__identity"><div class="avatar avatar--small">{{ user.initials|default('AM') }}</div><div class="truncate"><p>{{ user.name|default('Alex Morgan') }}</p><span>@{{ user.username|default('alexmorgan') }}</span></div></div>
+        <a class="button button--outline button--full" href="#profile">View profile</a>
+      </div>
+    </aside>
+
+    <main class="main-content"><div class="content-column">{% block content %}{% endblock %}</div></main>
+    {% block right_sidebar %}{% endblock %}
+  </div>
+  <script src="/static/js/app.js" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

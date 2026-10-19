@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set active_page = "dashboard" %}
+{% block title %}Profile · MovieBox{% endblock %}
+{% block page_id %}home{% endblock %}
+{% block content %}
+{% set latest_review = latest_review|default({}, true) %}
+{% set profile = profile|default({'name':'Alex Morgan','username':'alexmorgan','location':'Brooklyn, NY','initials':'AM','bio':'Thrillers after dark, sci-fi on Sundays. Always looking for stories that stay with you long after the credits roll.','badge':'Top reviewer'}, true) %}
+<div class="page-heading"><div><p class="eyebrow">{{ current_date_label|default('Thursday, May 23') }}</p><h1>Your movie world</h1></div><button class="icon-button notification-button" type="button" aria-label="Notifications"><svg class="icon"><use href="#icon-bell"/></svg><span class="notification-dot"></span></button></div>
+
+<section class="profile-card">
+  <div class="profile-card__cover"></div>
+  <div class="profile-card__body">
+    <div class="profile-card__top"><div class="avatar avatar--large">{{ profile.initials }}</div><button class="button button--outline" type="button"><svg class="icon icon--small"><use href="#icon-edit"/></svg>Edit profile</button></div>
+    <div class="profile-card__copy"><div class="title-row"><h2>{{ profile.name }}</h2><span class="badge">{{ profile.badge }}</span></div><p class="subtle">@{{ profile.username }} · {{ profile.location }}</p><p>{{ profile.bio }}</p></div>
+    <div class="stats-row">
+      {% for stat in profile_stats|default([['128','Movies'],['42','Reviews'],['614','Followers'],['183','Following']], true) %}<div><strong>{{ stat[0] }}</strong><span>{{ stat[1] }}</span></div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<nav class="tabs" aria-label="Profile sections">
+  {% for tab in ['Overview','Reviews','Watchlist','Groups'] %}<button class="tab {{ 'is-active' if loop.first else '' }}" type="button" data-tab-target="{{ tab|lower }}">{{ tab }}</button>{% endfor %}
+</nav>
+
+<div class="tab-panel is-active" data-tab-panel="overview">
+  <section class="two-column-cards section-space">
+    <div class="card"><div class="section-heading"><h2>Movie taste</h2></div><p class="micro-heading">Always in the mood for</p><div class="tags">{% for genre in favorite_genres|default(['Sci-Fi','Thriller','Neo-noir','Drama'], true) %}<span class="tag tag--accent">{{ genre }}</span>{% endfor %}</div><p class="micro-heading">Not my scene</p><div class="tags">{% for genre in disliked_genres|default(['Slapstick','Musicals'], true) %}<span class="tag">{{ genre }}</span>{% endfor %}</div></div>
+    <div class="card"><div class="section-heading"><h2>Year in movies</h2></div><div class="mini-stats">{% for stat in year_stats|default([['36','Watched'],['11','Reviewed'],['4.2','Avg. score']], true) %}<div><strong>{{ stat[0] }}</strong><span>{{ stat[1] }}</span></div>{% endfor %}</div><div class="progress"><span style="width: {{ movie_goal_percent|default(72) }}%"></span></div><p class="subtle small">{{ movies_watched|default(36) }} of {{ movie_goal|default(50) }} movie goal</p></div>
+  </section>
+  <section class="section-space"><div class="section-heading"><h2>Latest review</h2><a href="#activity">See all activity</a></div><article class="review-feature"><img src="{{ latest_review.image|default('https://images.unsplash.com/photo-1628015893843-5f7f6f6ccb01?auto=format&fit=crop&w=600&q=85') }}" alt="{{ latest_review.image_alt|default('Green mountains under a cinematic cloudy sky') }}"><div class="review-feature__body"><div class="review-feature__header"><div><p class="eyebrow">{{ latest_review.date_label|default('Reviewed 2 days ago') }}</p><h3>{{ latest_review.title|default('After the Rain') }} <span>{{ latest_review.year|default('2024') }}</span></h3></div><span class="score"><svg class="icon icon--tiny icon--fill"><use href="#icon-star"/></svg>{{ latest_review.score|default('4.5') }}</span></div><p>“{{ latest_review.text|default('A patient, beautifully framed story about starting over. The final twenty minutes are as quiet as they are devastating.') }}”</p><div class="engagement"><button type="button" data-like data-count="{{ latest_review.favorites|default(24) }}"><svg class="icon icon--small"><use href="#icon-heart"/></svg><span>{{ latest_review.favorites|default(24) }}</span></button><span><svg class="icon icon--small"><use href="#icon-message"/></svg>{{ latest_review.comments|default(8) }}</span><span><svg class="icon icon--small"><use href="#icon-eye"/></svg>{{ latest_review.views|default(186) }}</span></div></div></article></section>
+</div>
+
+<div class="tab-panel" data-tab-panel="reviews">
+  <section class="section-space"><div class="panel-heading"><div><h2>All reviews</h2><p>42 reviews shared with the community</p></div><label class="sort-control">Sort by<select data-review-sort><option value="newest">Newest first</option><option value="favorites">Most favorited</option></select></label></div><div class="review-list" data-review-list>
+    {% set reviews = reviews|default([
+      {'title':'After the Rain','year':'2024','date':'May 21, 2024','score':4.5,'favorites':24,'text':'A patient, beautifully framed story about starting over. The final twenty minutes are as quiet as they are devastating.','image':'https://images.unsplash.com/photo-1628015893843-5f7f6f6ccb01?auto=format&fit=crop&w=500&q=85'},
+      {'title':'Into the Mist','year':'2004','date':'May 08, 2024','score':4.7,'favorites':56,'text':'A slow-burn mystery that understands atmosphere is a character of its own. Still completely absorbing twenty years later.','image':'https://images.unsplash.com/photo-1718061474357-1511b1934a17?auto=format&fit=crop&w=500&q=85'},
+      {'title':'Where Rivers Sleep','year':'2023','date':'April 17, 2024','score':4.1,'favorites':17,'text':'Small moments, excellent performances, and a score that knows exactly when to disappear.','image':'https://images.unsplash.com/photo-1475070929565-c985b496cb9f?auto=format&fit=crop&w=500&q=85'}
+    ], true) %}
+    {% for review in reviews %}<article class="review-row" data-favorites="{{ review.favorites }}" data-order="{{ loop.index0 }}"><img src="{{ review.image }}" alt=""><div><div class="review-row__header"><div><h3>{{ review.title }} <span>{{ review.year }}</span></h3><p>Reviewed {{ review.date }}</p></div><span class="score"><svg class="icon icon--tiny icon--fill"><use href="#icon-star"/></svg>{{ review.score }}</span></div><p>“{{ review.text }}”</p><span class="favorite-count"><svg class="icon icon--small"><use href="#icon-heart"/></svg>{{ review.favorites }} favorites</span></div></article>{% endfor %}
+  </div></section>
+</div>
+
+<div class="tab-panel" data-tab-panel="watchlist"><section class="section-space"><div class="panel-heading"><div><h2>My watchlist</h2><p><span data-watchlist-count>{{ watchlist|length if watchlist is defined and watchlist else 3 }}</span> movies saved for later</p></div><button class="button button--primary" type="button"><svg class="icon icon--small"><use href="#icon-plus"/></svg>Add movie</button></div><div class="watchlist-grid">
+{% set watchlist_items = watchlist|default([
+{'title':'The Wild Horizon','year':'2024','genre':'Adventure','image':'https://images.unsplash.com/photo-1597434002293-fc9bb06371d8?auto=format&fit=crop&w=500&q=85'},
+{'title':'The Silent Pines','year':'1998','genre':'Mystery','image':'https://images.unsplash.com/photo-1661124280301-ca0e33ceb438?auto=format&fit=crop&w=500&q=85'},
+{'title':'Northern Light','year':'2022','genre':'Drama','image':'https://images.unsplash.com/photo-1618285545010-a44e4ffcd45b?auto=format&fit=crop&w=500&q=85'}], true) %}
+{% for movie in watchlist_items %}<article class="watchlist-card"><div class="watchlist-card__image"><img src="{{ movie.image }}" alt=""><button type="button" data-remove-watchlist>Remove</button></div><div class="watchlist-card__body"><h3>{{ movie.title }}</h3><p>{{ movie.year }} · {{ movie.genre }}</p><a href="#showtimes">Find showtimes <svg class="icon icon--tiny"><use href="#icon-arrow"/></svg></a></div></article>{% endfor %}
+</div></section></div>
+
+<div class="tab-panel" data-tab-panel="groups"><section class="section-space"><div class="panel-heading"><div><h2>Your groups</h2><p>Talk movies with your favorite people</p></div><button class="button button--outline" type="button"><svg class="icon icon--small accent"><use href="#icon-plus"/></svg>New group</button></div><div class="group-list">
+{% set groups = groups|default([{'name':'Brooklyn Film Club','members':84,'activity':'12 new messages','initials':'BF','gradient':'purple-teal'},{'name':'Sunday Sci-Fi','members':26,'activity':'3 new messages','initials':'SF','gradient':'accent-purple'},{'name':'Noir After Dark','members':41,'activity':'Active yesterday','initials':'ND','gradient':'teal-purple'}], true) %}
+{% for group in groups %}<article class="group-row"><div class="group-avatar gradient-{{ group.gradient }}">{{ group.initials }}</div><div class="group-row__copy"><h3>{{ group.name }}</h3><p>{{ group.members }} members · <span>{{ group.activity }}</span></p></div><button class="button button--primary" type="button" data-chat-button><svg class="icon icon--small"><use href="#icon-message"/></svg><span>Enter chat</span></button></article>{% endfor %}
+</div></section></div>
+{% endblock %}
+
+{% block right_sidebar %}
+<aside class="right-sidebar"><div class="right-sidebar__sticky">
+  <div class="section-heading"><h2>Coming soon</h2><a href="#calendar">View calendar</a></div>
+  {% set upcoming = upcoming|default([{'title':'The Wild Horizon','meta':'Adventure · Jun 14','image':'https://images.unsplash.com/photo-1597434002293-fc9bb06371d8?auto=format&fit=crop&w=700&q=85'},{'title':'Where Rivers Sleep','meta':'Drama · Jul 02','image':'https://images.unsplash.com/photo-1475070929565-c985b496cb9f?auto=format&fit=crop&w=700&q=85'}], true) %}
+  <div class="upcoming-list">{% for movie in upcoming %}<article class="upcoming-card"><img src="{{ movie.image }}" alt=""><div class="upcoming-card__shade"></div><div class="upcoming-card__copy"><div><h3>{{ movie.title }}</h3><p>{{ movie.meta }}</p></div><button type="button" aria-label="Play {{ movie.title }} trailer"><svg class="icon icon--small icon--fill"><use href="#icon-play"/></svg></button></div></article>{% endfor %}</div>
+  <div class="sidebar-section"><div class="section-heading"><h2>Modern classics</h2><a href="#classics">Browse all</a></div>{% set classics = classics|default([{'title':'The Silent Pines','year':'1998','score':'4.8','image':'https://images.unsplash.com/photo-1661124280301-ca0e33ceb438?auto=format&fit=crop&w=400&q=85'},{'title':'Into the Mist','year':'2004','score':'4.7','image':'https://images.unsplash.com/photo-1718061474357-1511b1934a17?auto=format&fit=crop&w=400&q=85'}], true) %}<div class="classic-list">{% for movie in classics %}<article class="classic-row"><img src="{{ movie.image }}" alt=""><div><h3>{{ movie.title }}</h3><p>{{ movie.year }}</p></div><span><svg class="icon icon--tiny icon--fill"><use href="#icon-star"/></svg>{{ movie.score }}</span></article>{% endfor %}</div></div>
+  <div class="nearby-card"><svg class="icon accent"><use href="#icon-ticket"/></svg><h3>Movie night nearby?</h3><p>Find showtimes at {{ nearby_theatre_count|default(12) }} theatres near {{ nearby_area|default('Brooklyn') }}.</p><a href="#theatres">Explore showtimes <svg class="icon icon--small"><use href="#icon-arrow"/></svg></a></div>
+</div></aside>
+{% endblock %}

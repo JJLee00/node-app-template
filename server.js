@@ -3,34 +3,30 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const nunjucks = require('nunjucks');
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware to parse JSON bodies
+nunjucks.configure(path.join(__dirname, 'templates'), {
+    autoescape: true,
+    express: app,
+    noCache: process.env.NODE_ENV !== 'production'
+});
+
+app.set('view engine', 'html');
+app.set('views', path.join(__dirname, 'templates'));
+
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use('/static', express.static(path.join(__dirname, 'static')));
 
-// Serve static files from the "public" folder
-app.use(express.static('public'));
+// Shared placeholder data. Replace with API/service results as backend data is connected.
+const sharedViewData = {
+    user: { name: 'Alex Morgan', username: 'alexmorgan', initials: 'AM' }
+};
 
-//////////////////////////////////////
-//ROUTES TO SERVE HTML FILES
-//////////////////////////////////////
-// Default route to serve logon.html
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/logon.html');
-});
-
-// Route to serve dashboard.html
-app.get('/dashboard', (req, res) => {
-    res.sendFile(__dirname + '/public/dashboard.html');
-});
-//////////////////////////////////////
-//END ROUTES TO SERVE HTML FILES
-//////////////////////////////////////
-
-
-/////////////////////////////////////////////////
 //HELPER FUNCTIONS AND AUTHENTICATION MIDDLEWARE
 /////////////////////////////////////////////////
 // Helper function to create a MySQL connection
@@ -82,6 +78,7 @@ async function authenticateToken(req, res, next) {
 /////////////////////////////////////////////////
 //END HELPER FUNCTIONS AND AUTHENTICATION MIDDLEWARE
 /////////////////////////////////////////////////
+
 
 
 //////////////////////////////////////
@@ -180,7 +177,56 @@ app.get('/api/users', authenticateToken, async (req, res) => {
 //////////////////////////////////////
 
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+//////////////////////////////////////
+// ROUTES TO SERVE HTML PAGES
+//////////////////////////////////////
+app.get('/', (req, res, next) => {
+    try { res.render('landing.html'); } catch (error) { next(error); }
 });
+
+app.get('/logon', (req, res, next) => {
+    try { res.render('logon.html'); } catch (error) { next(error); }
+});
+
+app.get('/dashboard', (req, res, next) => {
+    try { res.render('dashboard.html', { ...sharedViewData }); } catch (error) { next(error); }
+});
+
+app.get('/settings', (req, res, next) => {
+    try { res.render('settings.html', { ...sharedViewData }); } catch (error) { next(error); }
+});
+
+app.get('/searchpage', (req, res, next) => {
+    try { res.render('searchpage.html', { ...sharedViewData }); } catch (error) { next(error); }
+});
+
+app.get('/social', (req, res, next) => {
+    try { res.render('social.html', { ...sharedViewData }); } catch (error) { next(error); }
+});
+
+app.get('/theatres', (req, res, next) => {
+    try { res.render('theatres.html', { ...sharedViewData }); } catch (error) { next(error); }
+});
+
+app.get('/dashboard', async (req, res, next) => {
+    try {
+        res.render('dashboard.html', {
+            ...sharedViewData
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// 404 and error handlers must stay after every HTML and API route.
+app.use((req, res) => res.status(404).send('Page not found'));
+app.use((error, req, res, next) => {
+    console.error(error);
+    res.status(500).send('Internal server error');
+});
+
+if (require.main === module) {
+    app.listen(PORT, () => console.log(`MovieBox running at http://localhost:${PORT}`));
+}
+
+module.exports = app;
