@@ -51,6 +51,7 @@
       <a class="nav-item {{ 'is-active' if active_page == 'social' else '' }}" href="/social"><svg class="icon"><use href="#icon-users"/></svg>View socials</a>
       <a class="nav-item {{ 'is-active' if active_page == 'theatres' else '' }}" href="/theatres"><svg class="icon"><use href="#icon-pin"/></svg>Search theatres</a>
       <a class="nav-item {{ 'is-active' if active_page|default('home') == 'settings' else '' }}" href="/settings"><svg class="icon"><use href="#icon-settings"/></svg>Settings</a>
+      <button class="nav-item nav-item--button" type="button" data-logout><svg class="icon"><use href="#icon-lock"/></svg>Log out</button>
     </nav>
   </header>
 
@@ -68,6 +69,7 @@
       <div class="user-card">
         <div class="user-card__identity"><div class="avatar avatar--small">{{ user.initials|default('AM') }}</div><div class="truncate"><p>{{ user.name|default('Alex Morgan') }}</p><span>@{{ user.username|default('alexmorgan') }}</span></div></div>
         <a class="button button--outline button--full" href="#profile">View profile</a>
+        <button class="button button--outline button--full user-card__logout" type="button" data-logout>Log out</button>
       </div>
     </aside>
 

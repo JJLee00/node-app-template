@@ -1,4 +1,21 @@
 (() => {
+  // CHECK FOR TOKEN AS SOON AS THE PAGE LOADS
+  // Every page built on base.html loads this file, so this one check protects all of them.
+  // If the user isn't logged in, send them to the logon page.
+  const token = localStorage.getItem('movieboxToken');
+  if (!token) {
+    window.location.href = '/logon';
+    return;
+  }
+
+  // LOG OUT: remove the token and go back to the logon page
+  document.querySelectorAll('[data-logout]').forEach((button) => {
+    button.addEventListener('click', () => {
+      localStorage.removeItem('movieboxToken');
+      window.location.href = '/logon';
+    });
+  });
+
   const root = document.documentElement;
   const mobileToggle = document.querySelector('[data-mobile-menu-toggle]');
   const mobileNav = document.querySelector('.mobile-nav');
