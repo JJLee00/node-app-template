@@ -4,19 +4,46 @@
 {% block page_id %}search{% endblock %}
 {% block shell_class %}app-shell--single{% endblock %}
 {% block content %}
-<div class="page-heading"><p class="eyebrow">Discover</p><h1>Search movies</h1><p>Find new favorites by title, genre, rating, or release year.</p></div>
-<section class="card search-controls"><div class="search-bar"><div class="input-icon"><svg class="icon"><use href="#icon-search"/></svg><input id="searchInput" type="search" placeholder="Search movies, actors, directors..." aria-label="Search movies"></div><button class="button button--primary" id="searchButton" type="button">Search</button></div><div class="filter-grid"><select id="genreFilter"><option>All Genres</option><option>Adventure</option><option>Thriller</option><option>Drama</option><option>Sci-Fi</option><option>Horror</option></select><select id="ratingFilter"><option>All Ratings</option><option value="8">8+ Rating</option><option value="7">7+ Rating</option></select><select id="yearFilter"><option>All Years</option><option>2026</option><option>2025</option><option>2024</option></select></div></section>
-<div class="panel-heading results-heading"><h2>Search results</h2><span id="resultCount">6 movies</span></div>
-<div class="movie-grid" id="movieGrid">
 {% set movies = movies|default([
- {'title':'The Wild Horizon','year':'2026','genre':'Adventure','score':8.5,'image':'https://images.unsplash.com/photo-1597434002293-fc9bb06371d8?auto=format&fit=crop&w=600&q=85'},
- {'title':'Into the Mist','year':'2025','genre':'Thriller','score':7.9,'image':'https://images.unsplash.com/photo-1718061474357-1511b1934a17?auto=format&fit=crop&w=600&q=85'},
- {'title':'Where Rivers Sleep','year':'2024','genre':'Drama','score':8.2,'image':'https://images.unsplash.com/photo-1475070929565-c985b496cb9f?auto=format&fit=crop&w=600&q=85'},
- {'title':'Northern Light','year':'2025','genre':'Sci-Fi','score':8.8,'image':'https://images.unsplash.com/photo-1618285545010-a44e4ffcd45b?auto=format&fit=crop&w=600&q=85'},
- {'title':'The Silent Pines','year':'2024','genre':'Horror','score':7.6,'image':'https://images.unsplash.com/photo-1661124280301-ca0e33ceb438?auto=format&fit=crop&w=600&q=85'},
- {'title':'Above the Clouds','year':'2026','genre':'Drama','score':8.1,'image':'https://images.unsplash.com/photo-1628015893843-5f7f6f6ccb01?auto=format&fit=crop&w=600&q=85'}
+ {'title':'The Wild Horizon','year':'2026','genre':'Adventure','score':8.5,'reviewCount':1248,'releaseDate':'In theatres June 14, 2026','description':'A restless cartographer crosses an unmapped wilderness with a crew of unlikely companions, chasing a horizon that seems to move farther away with every step.','image':'https://images.unsplash.com/photo-1597434002293-fc9bb06371d8?auto=format&fit=crop&w=1000&q=85','gallery':['https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=700&q=85','https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=700&q=85']},
+ {'title':'Into the Mist','year':'2025','genre':'Thriller','score':7.9,'reviewCount':896,'releaseDate':'Released October 18, 2025','description':'When a coastal town disappears beneath a strange fog, a sound engineer follows a faint radio signal that may be coming from someone she lost years ago.','image':'https://images.unsplash.com/photo-1718061474357-1511b1934a17?auto=format&fit=crop&w=1000&q=85','gallery':['https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?auto=format&fit=crop&w=700&q=85','https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=700&q=85']},
+ {'title':'Where Rivers Sleep','year':'2024','genre':'Drama','score':8.2,'reviewCount':2143,'releaseDate':'Released September 6, 2024','description':'Three generations return to their family home beside a changing river and discover that moving forward means finally telling the stories they kept from one another.','image':'https://images.unsplash.com/photo-1475070929565-c985b496cb9f?auto=format&fit=crop&w=1000&q=85','gallery':['https://images.unsplash.com/photo-1437482078695-73f5ca6c96e2?auto=format&fit=crop&w=700&q=85','https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=700&q=85']},
+ {'title':'Northern Light','year':'2025','genre':'Sci-Fi','score':8.8,'reviewCount':3571,'releaseDate':'Released December 12, 2025','description':'A physicist at an isolated Arctic station finds a message hidden inside the aurora—and only forty-eight hours to understand its warning.','image':'https://images.unsplash.com/photo-1618285545010-a44e4ffcd45b?auto=format&fit=crop&w=1000&q=85','gallery':['https://images.unsplash.com/photo-1483347756197-71ef80e95f73?auto=format&fit=crop&w=700&q=85','https://images.unsplash.com/photo-1529963183134-61a90db47eaf?auto=format&fit=crop&w=700&q=85']},
+ {'title':'The Silent Pines','year':'2024','genre':'Horror','score':7.6,'reviewCount':672,'releaseDate':'Released October 25, 2024','description':'A weekend retreat turns into a waking nightmare when five friends realize the forest around their cabin has gone completely, impossibly silent.','image':'https://images.unsplash.com/photo-1661124280301-ca0e33ceb438?auto=format&fit=crop&w=1000&q=85','gallery':['https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=700&q=85','https://images.unsplash.com/photo-1473448912268-2022ce9509d8?auto=format&fit=crop&w=700&q=85']},
+ {'title':'Above the Clouds','year':'2026','genre':'Drama','score':8.1,'reviewCount':421,'releaseDate':'In theatres August 7, 2026','description':'An estranged father and daughter take one final climbing expedition together, confronting old wounds as a storm closes in around them.','image':'https://images.unsplash.com/photo-1628015893843-5f7f6f6ccb01?auto=format&fit=crop&w=1000&q=85','gallery':['https://images.unsplash.com/photo-1464278533981-50106e6176b1?auto=format&fit=crop&w=700&q=85','https://images.unsplash.com/photo-1486911278844-a81c5267e227?auto=format&fit=crop&w=700&q=85']}
 ], true) %}
-{% for movie in movies %}<article class="movie-card" data-title="{{ movie.title|lower }}" data-genre="{{ movie.genre }}" data-rating="{{ movie.score }}" data-year="{{ movie.year }}"><div class="movie-card__image"><img src="{{ movie.image }}" alt=""><button class="save-movie" type="button" aria-label="Add {{ movie.title }} to watchlist"><svg class="icon icon--small"><use href="#icon-plus"/></svg></button><span class="movie-score"><svg class="icon icon--tiny icon--fill"><use href="#icon-star"/></svg>{{ movie.score }}</span></div><div class="movie-card__body"><h3>{{ movie.title }}</h3><p>{{ movie.year }} · {{ movie.genre }}</p></div></article>{% endfor %}
-</div><div class="empty-state" id="emptyResults" hidden><svg class="icon"><use href="#icon-search"/></svg><strong>No movies found</strong><span>Try adjusting your search or filters.</span></div>
+
+<div id="movieSearchView">
+  <div class="page-heading"><p class="eyebrow">Discover</p><h1>Search movies</h1><p>Find new favorites by title, genre, rating, or release year.</p></div>
+  <section class="card search-controls">
+    <div class="search-bar"><div class="input-icon"><svg class="icon"><use href="#icon-search"/></svg><input id="searchInput" type="search" placeholder="Search movies, actors, directors..." aria-label="Search movies"></div><button class="button button--primary" id="searchButton" type="button">Search</button></div>
+    <div class="filter-grid"><select id="genreFilter"><option>All Genres</option><option>Adventure</option><option>Thriller</option><option>Drama</option><option>Sci-Fi</option><option>Horror</option></select><select id="ratingFilter"><option>All Ratings</option><option value="8">8+ Rating</option><option value="7">7+ Rating</option></select><select id="yearFilter"><option>All Years</option><option>2026</option><option>2025</option><option>2024</option></select></div>
+  </section>
+  <div class="panel-heading results-heading"><h2>Search results</h2><span id="resultCount">{{ movies|length }} movies</span></div>
+  <div class="movie-grid" id="movieGrid">
+    {% for movie in movies %}
+    <article class="movie-card" data-movie-index="{{ loop.index0 }}" data-title="{{ movie.title|lower }}" data-genre="{{ movie.genre }}" data-rating="{{ movie.score }}" data-year="{{ movie.year }}">
+      <div class="movie-card__image"><img src="{{ movie.image }}" alt=""><div class="movie-card__shade"></div><button class="movie-details-button" type="button" aria-label="View details for {{ movie.title }}"><svg class="icon icon--small"><use href="#icon-plus"/></svg></button><span class="movie-score"><svg class="icon icon--tiny icon--fill"><use href="#icon-star"/></svg>{{ movie.score }}</span></div>
+      <div class="movie-card__body"><h3>{{ movie.title }}</h3><p>{{ movie.year }} · {{ movie.genre }}</p></div>
+    </article>
+    {% endfor %}
+  </div>
+  <div class="empty-state" id="emptyResults" hidden><svg class="icon"><use href="#icon-search"/></svg><strong>No movies found</strong><span>Try adjusting your search or filters.</span></div>
+</div>
+
+<div id="movieDetailView" class="movie-detail-view" hidden>
+  <button id="backToResults" class="movie-detail-back" type="button"><svg class="icon icon--small"><use href="#icon-arrow"/></svg>Back to search results</button>
+  <article class="movie-detail-card">
+    <div class="movie-detail-hero"><img id="detailImage" src="" alt=""><div class="movie-detail-overlay"></div><div class="movie-detail-play"><button type="button" id="trailerButton" aria-label="Watch trailer"><span><svg class="icon"><use href="#icon-play"/></svg></span><strong>Watch trailer</strong></button></div><span class="movie-detail-badge">Official trailer</span></div>
+    <div class="movie-detail-body">
+      <div class="movie-detail-summary"><div><p class="eyebrow" id="detailMeta"></p><h1 id="detailTitle"></h1><p class="movie-detail-release"><svg class="icon icon--small"><use href="#icon-calendar"/></svg><span id="detailRelease"></span></p></div><div class="movie-detail-rating"><span><svg class="icon icon--small icon--fill"><use href="#icon-star"/></svg></span><div><strong><span id="detailScore"></span> <small>/ 10</small></strong><p id="detailReviews"></p></div></div></div>
+      <p class="movie-detail-description" id="detailDescription"></p>
+      <section class="movie-gallery"><div class="panel-heading"><h2>Related images</h2><span>3 stills</span></div><div class="movie-gallery-grid" id="detailGallery"></div></section>
+      <div class="movie-detail-actions"><a class="button button--primary" id="reviewMovieLink" href="/social"><svg class="icon icon--small"><use href="#icon-edit"/></svg>Leave a review</a><button class="button button--outline" id="favoriteMovie" type="button"><svg class="icon icon--small"><use href="#icon-heart"/></svg><span>Favorite</span></button><button class="button button--outline movie-detail-close" id="leaveDisplay" type="button">Leave display</button></div>
+    </div>
+  </article>
+</div>
+
+<script type="application/json" id="movieCatalogData">{{ movies|dump|safe }}</script>
 {% endblock %}
 {% block scripts %}<script src="/static/js/searchpage.js" defer></script>{% endblock %}

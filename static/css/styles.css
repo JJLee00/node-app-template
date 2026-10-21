@@ -16,3 +16,32 @@
 /* Log out buttons (sidebar user card and mobile menu) */
 .user-card__logout{margin-top:8px}
 .nav-item--button{width:100%;border:0;background:none;text-align:left}
+
+/* Movie search v0.21 ------------------------------------------------------
+   The Figma detail screen remains inside searchpage.html so Express does not
+   need another route/template just to inspect a selected movie. */
+.movie-card__shade{position:absolute;inset:0;background:linear-gradient(to top,rgb(0 0 0/.7),transparent 55%)}
+.movie-details-button{position:absolute;right:12px;top:12px;display:grid;place-items:center;width:36px;height:36px;border:0;border-radius:50%;background:rgb(0 0 0/.5);color:white;backdrop-filter:blur(8px);transition:.2s}
+.movie-details-button:hover{background:var(--accent);color:var(--canvas)}
+.movie-detail-view[hidden],#movieSearchView[hidden]{display:none!important}
+.movie-detail-back{display:flex;align-items:center;gap:8px;margin:0 0 20px;border:0;background:none;padding:0;color:var(--muted);font-size:14px;font-weight:600}
+.movie-detail-back .icon{transform:rotate(180deg)}
+.movie-detail-card{overflow:hidden;border:1px solid var(--line);border-radius:24px;background:var(--panel);box-shadow:var(--shadow)}
+.movie-detail-hero{position:relative;height:384px;overflow:hidden}
+.movie-detail-hero>img{width:100%;height:100%;object-fit:cover}
+.movie-detail-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgb(0 0 0/.95),rgb(0 0 0/.25),rgb(0 0 0/.2))}
+.movie-detail-play{position:absolute;inset:0;display:grid;place-items:center}
+.movie-detail-play button{display:flex;flex-direction:column;align-items:center;gap:12px;border:0;background:none;color:white;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.16em}
+.movie-detail-play button>span{display:grid;place-items:center;width:64px;height:64px;border:1px solid rgb(255 255 255/.3);border-radius:50%;background:rgb(0 0 0/.45);backdrop-filter:blur(8px);transition:.2s}
+.movie-detail-play button:hover>span,.movie-detail-play button.is-playing>span{transform:scale(1.05);background:var(--accent)}
+.movie-detail-play .icon{width:28px;height:28px;fill:currentColor}
+.movie-detail-badge{position:absolute;left:20px;top:20px;border-radius:999px;background:rgb(0 0 0/.55);padding:7px 12px;color:white;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;backdrop-filter:blur(8px)}
+.movie-detail-body{padding:28px}
+.movie-detail-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.movie-detail-summary h1{margin:0;color:var(--ink);font:700 36px var(--display);letter-spacing:-.03em}
+.movie-detail-release{display:flex;align-items:center;gap:8px;margin:10px 0 0;color:var(--muted);font-size:14px}.movie-detail-release .icon{color:var(--accent)}
+.movie-detail-rating{display:flex;flex-shrink:0;align-items:center;gap:12px;border:1px solid var(--line);border-radius:16px;background:var(--canvas);padding:12px 16px}.movie-detail-rating>span{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent)}.movie-detail-rating strong{display:block;color:var(--ink);font:700 20px var(--display)}.movie-detail-rating small{color:var(--dim);font-size:12px;font-weight:500}.movie-detail-rating p{margin:2px 0 0;color:var(--dim);font-size:10px}
+.movie-detail-description{margin:24px 0 0;color:var(--muted);font-size:14px;line-height:1.9}
+.movie-gallery{margin-top:28px}.movie-gallery .panel-heading{margin-bottom:12px}.movie-gallery .panel-heading h2{margin:0;color:var(--ink);font:700 18px var(--display)}.movie-gallery .panel-heading span{color:var(--dim);font-size:12px}.movie-gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.movie-gallery-grid img{width:100%;height:144px;border-radius:12px;object-fit:cover}
+.movie-detail-actions{display:flex;gap:12px;margin-top:28px;border-top:1px solid var(--line);padding-top:24px}.movie-detail-actions .button{display:flex;align-items:center;justify-content:center;gap:8px}.movie-detail-close{margin-left:auto}.button--outline.is-favorite{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent)}.button--outline.is-favorite .icon{fill:currentColor}
+@media(max-width:639px){.movie-detail-hero{height:256px}.movie-detail-body{padding:20px}.movie-detail-summary{flex-direction:column}.movie-detail-summary h1{font-size:30px}.movie-gallery-grid{gap:8px}.movie-gallery-grid img{height:96px}.movie-detail-actions{flex-direction:column}.movie-detail-close{margin-left:0}}
