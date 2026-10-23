@@ -172,6 +172,61 @@ app.get('/api/users', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'Error retrieving email addresses.' });
     }
 });
+
+// Search for movies using the TMDB API
+app.get('/api/movies/search', async (req, res) => {
+    const query = String(req.query.query || '').trim();
+
+    if (!query) {
+        return res.status(400).json({
+            message: 'Please enter a movie title.'
+        });
+    }
+
+    if (!process.env.TMDB_API_KEY) {
+        return res.status(500).json({
+            message: 'TMDB API key is not configured.'
+        });
+    }
+
+    try {
+        const url = new URL(
+            'https://api.themoviedb.org/3/search/movie'
+        );
+
+        url.searchParams.set('query', query);
+        url.searchParams.set('language', 'en-US');
+
+        url.searchParams.set('api_key', process.env.TMDB_API_KEY);
+
+const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`TMDB returned ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        res.json({
+            results: data.results.map(movie => ({
+                id: movie.id,
+                title: movie.title,
+                description: movie.overview,
+                releaseDate: movie.release_date,
+                rating: movie.vote_average,
+                poster: movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                    : null
+            }))
+        });
+
+    } catch (error) {
+        console.error('TMDB search error:', error);
+        res.status(502).json({
+            message: 'Unable to retrieve movies from TMDB.'
+        });
+    }
+});
 //////////////////////////////////////
 //END ROUTES TO HANDLE API REQUESTS
 //////////////////////////////////////
