@@ -1,12 +1,104 @@
 {% extends "base.html" %}
 {% set active_page = "social" %}
-{% block title %}Social feed · MovieBox{% endblock %}
+{% block title %}Movie reviews · MovieBox{% endblock %}
 {% block page_id %}social{% endblock %}
 {% block shell_class %}app-shell--single{% endblock %}
 {% block content %}
-<div class="page-heading"><p class="eyebrow">Community</p><h1>Your social feed</h1><p>Share a take, follow the conversation, and catch up with your groups.</p></div>
-<section class="card composer"><div class="composer__identity"><div class="avatar avatar--small">{{ user.initials|default('AM') }}</div><div><h2>Write a review</h2><p>What did you watch?</p></div></div><input id="reviewMovie" placeholder="Movie title"><textarea id="reviewText" placeholder="Share your thoughts..."></textarea><div class="composer__actions"><div class="star-picker" aria-label="Rating"><button type="button">★</button><button type="button">★</button><button type="button">★</button><button type="button">★</button><button type="button">★</button></div><select id="reviewVisibility"><option>Public</option><option>Private</option><option>Group</option></select><label><input type="checkbox" id="anonymousReview"> Post anonymously</label><button class="button button--primary" id="postReview" type="button" disabled><svg class="icon icon--small"><use href="#icon-send"/></svg>Post review</button></div><p class="composer__notice" id="postNotice" hidden></p></section>
-<div class="panel-heading results-heading"><h2>Review feed</h2><button class="text-button" type="button"><svg class="icon icon--small"><use href="#icon-filter"/></svg>Latest</button></div>
-<div class="feed-list"><article class="feed-card"><div class="feed-card__header"><div class="avatar avatar--small">MC</div><div><strong>Maya Chen</strong><span>18 min ago · Public</span></div><div class="feed-stars">★★★★★</div></div><p class="feed-movie">The Wild Horizon</p><p>Big, sincere filmmaking with an incredible sense of scale. That final shot is going to live in my head all week.</p><div class="feed-actions"><button type="button" data-like data-count="38"><svg class="icon icon--small"><use href="#icon-heart"/></svg><span>38</span></button><button type="button"><svg class="icon icon--small"><use href="#icon-message"/></svg>Comment</button><button type="button"><svg class="icon icon--small"><use href="#icon-send"/></svg>Share</button></div></article><article class="feed-card"><div class="feed-card__header"><div class="avatar avatar--small">A</div><div><strong>Anonymous</strong><span>2 hr ago · Group · Sunday Sci-Fi</span></div><div class="feed-stars">★★★★</div></div><p class="feed-movie">Into the Mist</p><p>Patient and strange in all the right ways. The sound design deserves its own five-star review.</p><div class="feed-actions"><button type="button" data-like data-count="21"><svg class="icon icon--small"><use href="#icon-heart"/></svg><span>21</span></button><button type="button"><svg class="icon icon--small"><use href="#icon-message"/></svg>Comment</button><button type="button"><svg class="icon icon--small"><use href="#icon-send"/></svg>Share</button></div></article></div>
+<div class="page-heading">
+  <p class="eyebrow">Community</p>
+  <h1>Movie reviews</h1>
+  <p>Choose a movie to see its ratings, read public reviews, and share your own.</p>
+</div>
+
+<!-- Movie selection always stays at the top of Socials. TMDB is the source of truth. -->
+<section class="card social-movie-picker">
+  <div class="social-section-heading">
+    <div>
+      <h2>Select a movie</h2>
+      <p>Search the MovieBox catalog to open its review page.</p>
+    </div>
+  </div>
+  <form id="socialMovieSearch" class="social-movie-search" autocomplete="off">
+    <div class="social-search-field">
+      <svg class="icon"><use href="#icon-search"/></svg>
+      <input id="socialMovieQuery" type="search" placeholder="Search by movie title..." aria-label="Search by movie title">
+    </div>
+    <button class="button button--primary" type="submit">Search movies</button>
+  </form>
+  <p class="social-status" id="socialSearchStatus" role="status"></p>
+  <div class="social-movie-results" id="socialMovieResults" hidden></div>
+</section>
+
+<!-- Empty state is replaced with the review page after a TMDB movie is selected. -->
+<section class="social-empty-state" id="socialEmptyState">
+  <svg class="icon"><use href="#icon-search"/></svg>
+  <h2>Select a movie to begin</h2>
+  <p>Ratings and reviews will appear here after you choose a movie.</p>
+</section>
+
+<div id="socialReviewPage" hidden>
+  <section class="social-movie-summary">
+    <img id="socialMoviePoster" alt="" hidden>
+    <div class="social-movie-summary__body">
+      <div>
+        <p class="eyebrow" id="socialMovieMeta">Movie</p>
+        <h2 id="socialMovieTitle">Selected movie</h2>
+        <p class="social-release" id="socialMovieRelease"></p>
+      </div>
+      <div class="social-review-stats">
+        <div class="social-stat">
+          <svg class="icon"><use href="#icon-star"/></svg>
+          <div><strong id="socialAverageRating">—</strong><span>/ 5</span><small>Average rating</small></div>
+        </div>
+        <div class="social-stat">
+          <strong id="socialReviewCount">0</strong>
+          <small>Total reviews</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="social-review-section">
+    <div class="social-section-heading">
+      <div><h2>Your reviews</h2><p id="myReviewsDescription">Reviews you have shared for this movie.</p></div>
+    </div>
+    <div class="social-review-list" id="myReviews"></div>
+    <div class="social-list-empty" id="myReviewsEmpty">
+      <svg class="icon"><use href="#icon-edit"/></svg>
+      <strong>You have not reviewed this movie yet</strong>
+      <span>Use the review form below when you are ready.</span>
+    </div>
+  </section>
+
+  <section class="social-review-section">
+    <div class="social-section-heading social-section-heading--split">
+      <div><h2>Public reviews</h2><p>What other MovieBox members are saying.</p></div>
+      <span id="publicReviewCount">0 shown</span>
+    </div>
+    <div class="social-review-list" id="publicReviews"></div>
+    <div class="social-list-empty" id="publicReviewsEmpty">
+      <svg class="icon"><use href="#icon-users"/></svg>
+      <strong>No public reviews yet</strong>
+      <span>Be the first to start the conversation.</span>
+    </div>
+  </section>
+
+  <!-- Review composition deliberately remains last so users see existing context first. -->
+  <section class="card social-review-composer">
+    <div class="composer__identity">
+      <div class="avatar avatar--small">{{ user.initials|default('AM') }}</div>
+      <div><h2>Write a review</h2><p id="reviewComposerMovie">Share your take on this movie.</p></div>
+    </div>
+    <textarea id="reviewText" placeholder="What did you think of the movie?" maxlength="2000"></textarea>
+    <div class="composer__actions">
+      <div class="star-picker" id="reviewRating" aria-label="Rating">
+        {% for star in [1, 2, 3, 4, 5] %}<button type="button" data-rating="{{ star }}" aria-label="{{ star }} stars">★</button>{% endfor %}
+      </div>
+      <select id="reviewVisibility" aria-label="Review visibility"><option>Public</option><option>Private</option></select>
+      <button class="button button--primary" id="postReview" type="button" disabled><svg class="icon icon--small"><use href="#icon-send"/></svg>Post review</button>
+    </div>
+    <p class="composer__notice" id="postNotice" role="status" hidden></p>
+  </section>
+</div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/social.js" defer></script>{% endblock %}

@@ -470,6 +470,239 @@ app.get('/api/movies/:id/trailer', async (req, res) => {
 });
 
 // --------------------------------
+// SOCIALS: MOVIE + REVIEW DATA
+// --------------------------------
+
+async function ensureSocialTables(connection) {
+  // TMDB IDs are the stable external identifier. Titles are display data only.
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS social_movie (
+      id INT NOT NULL AUTO_INCREMENT,
+      tmdb_id INT NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      release_date DATE NULL,
+      poster_url VARCHAR(500) NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_social_movie_tmdb (tmdb_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS social_review (
+      id INT NOT NULL AUTO_INCREMENT,
+      social_movie_id INT NOT NULL,
+      reviewer_email VARCHAR(255) NOT NULL,
+      rating TINYINT NOT NULL,
+      review_text TEXT NOT NULL,
+      visibility ENUM('Public', 'Private') NOT NULL DEFAULT 'Public',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      KEY idx_social_review_movie (social_movie_id),
+      KEY idx_social_review_reviewer (reviewer_email),
+      CONSTRAINT fk_social_review_movie
+        FOREIGN KEY (social_movie_id) REFERENCES social_movie(id)
+        ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+}
+
+async function fetchTmdbMovie(movieId) {
+  if (!process.env.TMDB_API_KEY) {
+    const error = new Error('TMDB API key is not configured.');
+    error.status = 500;
+    throw error;
+  }
+
+  const url = new URL(`https://api.themoviedb.org/3/movie/${movieId}`);
+  url.searchParams.set('api_key', process.env.TMDB_API_KEY);
+  url.searchParams.set('language', 'en-US');
+
+  const response = await fetch(url);
+  if (response.status === 404) {
+    const error = new Error('That movie does not exist in TMDB.');
+    error.status = 404;
+    throw error;
+  }
+  if (!response.ok) throw new Error(`TMDB returned ${response.status}`);
+
+  return await response.json();
+}
+
+// Validate the selected TMDB movie and lazily add it to the Socials catalog.
+app.post('/api/social/movies/resolve', authenticateToken, async (req, res) => {
+  const tmdbId = Number(req.body.tmdbId);
+  if (!Number.isInteger(tmdbId) || tmdbId <= 0) {
+    return res.status(400).json({ message: 'A valid TMDB movie ID is required.' });
+  }
+
+  let connection;
+  try {
+    const tmdbMovie = await fetchTmdbMovie(tmdbId);
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    const posterUrl = tmdbMovie.poster_path
+      ? `https://image.tmdb.org/t/p/w500${tmdbMovie.poster_path}`
+      : null;
+
+    // Upsert keeps the local Socials record synchronized without duplicating it.
+    await connection.execute(
+      `INSERT INTO social_movie (tmdb_id, title, release_date, poster_url)
+       VALUES (?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         title = VALUES(title),
+         release_date = VALUES(release_date),
+         poster_url = VALUES(poster_url)`,
+      [tmdbMovie.id, tmdbMovie.title, tmdbMovie.release_date || null, posterUrl]
+    );
+
+    const [rows] = await connection.execute(
+      `SELECT id, tmdb_id, title, DATE_FORMAT(release_date, '%Y-%m-%d') AS release_date, poster_url
+       FROM social_movie WHERE tmdb_id = ?`,
+      [tmdbMovie.id]
+    );
+    const movie = rows[0];
+
+    res.json({
+      movie: {
+        id: movie.id,
+        tmdbId: movie.tmdb_id,
+        title: movie.title,
+        releaseDate: movie.release_date,
+        poster: movie.poster_url
+      }
+    });
+  } catch (error) {
+    console.error('Social movie resolve error:', error);
+    res.status(error.status || 502).json({
+      message: error.message || 'Unable to validate this movie.'
+    });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Return aggregate Socials ratings, the current user's reviews, and other
+// users' public reviews for the selected movie.
+app.get('/api/social/movies/:id/reviews', authenticateToken, async (req, res) => {
+  const movieId = Number(req.params.id);
+  if (!Number.isInteger(movieId) || movieId <= 0) {
+    return res.status(400).json({ message: 'Invalid Socials movie ID.' });
+  }
+
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    const [movies] = await connection.execute(
+      'SELECT id FROM social_movie WHERE id = ?', [movieId]
+    );
+    if (!movies.length) return res.status(404).json({ message: 'Movie not found in Socials.' });
+
+    const [summaryRows] = await connection.execute(
+      `SELECT COUNT(*) AS review_count, ROUND(AVG(rating), 2) AS average_rating
+       FROM social_review WHERE social_movie_id = ?`,
+      [movieId]
+    );
+
+    const [myRows] = await connection.execute(
+      `SELECT id, rating, review_text, visibility, created_at
+       FROM social_review
+       WHERE social_movie_id = ? AND reviewer_email = ?
+       ORDER BY created_at DESC`,
+      [movieId, req.user.email]
+    );
+
+    const [publicRows] = await connection.execute(
+      `SELECT id, reviewer_email, rating, review_text, created_at
+       FROM social_review
+       WHERE social_movie_id = ?
+         AND visibility = 'Public'
+         AND reviewer_email <> ?
+       ORDER BY created_at DESC`,
+      [movieId, req.user.email]
+    );
+
+    const publicReviews = publicRows.map(review => {
+      // The current user table stores email but no public display name. Do not
+      // expose another member's email address in the Socials response.
+      return {
+        id: review.id,
+        reviewerName: 'MovieBox member',
+        initials: 'MB',
+        rating: review.rating,
+        reviewText: review.review_text,
+        createdAt: review.created_at
+      };
+    });
+
+    res.json({
+      summary: {
+        reviewCount: Number(summaryRows[0].review_count || 0),
+        averageRating: Number(summaryRows[0].average_rating || 0)
+      },
+      myReviews: myRows.map(review => ({
+        id: review.id,
+        rating: review.rating,
+        reviewText: review.review_text,
+        visibility: review.visibility,
+        createdAt: review.created_at
+      })),
+      publicReviews
+    });
+  } catch (error) {
+    console.error('Social reviews error:', error);
+    res.status(500).json({ message: 'Unable to load reviews.' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+app.post('/api/social/movies/:id/reviews', authenticateToken, async (req, res) => {
+  const movieId = Number(req.params.id);
+  const rating = Number(req.body.rating);
+  const reviewText = String(req.body.reviewText || '').trim();
+  const visibility = req.body.visibility === 'Private' ? 'Private' : 'Public';
+
+  if (!Number.isInteger(movieId) || movieId <= 0) {
+    return res.status(400).json({ message: 'Invalid Socials movie ID.' });
+  }
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: 'Choose a rating from 1 to 5 stars.' });
+  }
+  if (!reviewText) return res.status(400).json({ message: 'Write a review before posting.' });
+  if (reviewText.length > 2000) return res.status(400).json({ message: 'Review must be 2,000 characters or fewer.' });
+
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    const [movies] = await connection.execute(
+      'SELECT id FROM social_movie WHERE id = ?', [movieId]
+    );
+    if (!movies.length) return res.status(404).json({ message: 'Movie not found in Socials.' });
+
+    await connection.execute(
+      `INSERT INTO social_review
+       (social_movie_id, reviewer_email, rating, review_text, visibility)
+       VALUES (?, ?, ?, ?, ?)`,
+      [movieId, req.user.email, rating, reviewText, visibility]
+    );
+
+    res.status(201).json({ message: `Your ${visibility.toLowerCase()} review was posted.` });
+  } catch (error) {
+    console.error('Post social review error:', error);
+    res.status(500).json({ message: 'Unable to post review.' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
+// --------------------------------
 // HTML PAGE ROUTES
 // --------------------------------
 

@@ -32,3 +32,9 @@ Open `http://localhost:3000`.
 Sample movie, review, theatre, and profile content is intentionally kept as template fallback data. Pass real data through `res.render()` as APIs/database services are connected.
 
 Keep new API and page routes above the final 404/error handlers in `server.js`.
+
+## Social reviews v0.3
+
+The Socials page now starts with TMDB-backed movie selection. Selecting a result calls `POST /api/social/movies/resolve`; Express validates the TMDB ID and upserts that movie into `social_movie`. The review page then loads aggregate MovieBox ratings, the signed-in user's reviews, and other users' public reviews from MySQL. Posting a review uses `POST /api/social/movies/:id/reviews`.
+
+The Socials tables are created with `CREATE TABLE IF NOT EXISTS` when the Socials API is first used. Socials API requests are protected by the existing JWT middleware, so the browser must have `movieboxToken` from a successful login. `TMDB_API_KEY` and the existing MySQL environment variables must also be configured in `.env`.
