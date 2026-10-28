@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>{{ list.title if list else 'List not found' }} · MovieBox</title>
+  {% if list %}
+  <meta property="og:title" content="{{ list.title }} · MovieBox">
+  <meta property="og:description" content="A ranked list of {{ list.items.length }} movie{{ '' if list.items.length == 1 else 's' }} shared on MovieBox.">
+  {% if list.items.length and list.items[0].poster %}<meta property="og:image" content="{{ list.items[0].poster }}">{% endif %}
+  {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<!-- Public page: does not load app.js, which would redirect logged-out visitors to /logon. -->
+<body class="public-page">
+  <header class="public-header"><div class="public-header__inner">
+    <a class="brand" href="/"><span class="brand__mark">▶</span><span>MovieBox</span></a>
+    <a class="button button--primary" href="/logon">Join MovieBox</a>
+  </div></header>
+
+  <main class="shared-list-page">
+    {% if list %}
+    <div class="page-heading">
+      <p class="eyebrow">Shared ranked list</p>
+      <h1>{{ list.title }}</h1>
+      <p>A MovieBox member ranked {{ list.items.length }} movie{{ '' if list.items.length == 1 else 's' }}.</p>
+    </div>
+
+    {% if list.items.length %}
+    <ol class="ranking-list ranking-list--large">
+      {% for movie in list.items %}
+      <li class="ranking-row">
+        <span class="ranking-row__rank">{{ movie.rank }}</span>
+        {% if movie.poster %}<img class="ranking-row__poster" src="{{ movie.poster }}" alt="">{% else %}<span class="ranking-row__poster ranking-row__poster--empty">No poster</span>{% endif %}
+        <span class="ranking-row__body"><strong>{{ movie.title }}</strong><small>{{ movie.releaseDate.slice(0, 4) if movie.releaseDate else 'Release date unavailable' }}</small></span>
+        <a class="button button--outline" href="/social?movie={{ movie.tmdbId }}">See reviews</a>
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <section class="social-list-empty"><strong>This list is empty</strong><span>Check back after the owner adds movies.</span></section>
+    {% endif %}
+
+    <section class="card shared-list-cta">
+      <div><h2>Make your own ranked list</h2><p>Rate movies, rank your favorites, and share them with friends on MovieBox.</p></div>
+      <a class="button button--primary" href="/logon">Get started</a>
+    </section>
+    {% else %}
+    <section class="social-empty-state">
+      <h2>This list is not available</h2>
+      <p>The link may be wrong, or the owner stopped sharing it.</p>
+      <a class="button button--primary" href="/">Go to MovieBox</a>
+    </section>
+    {% endif %}
+  </main>
+</body>
+</html>

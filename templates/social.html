@@ -29,13 +29,6 @@
   <div class="social-movie-results" id="socialMovieResults" hidden></div>
 </section>
 
-<!-- Empty state is replaced with the review page after a TMDB movie is selected. -->
-<section class="social-empty-state" id="socialEmptyState">
-  <svg class="icon"><use href="#icon-search"/></svg>
-  <h2>Select a movie to begin</h2>
-  <p>Ratings and reviews will appear here after you choose a movie.</p>
-</section>
-
 <div id="socialReviewPage" hidden>
   <section class="social-movie-summary">
     <img id="socialMoviePoster" alt="" hidden>
@@ -54,7 +47,15 @@
           <strong id="socialReviewCount">0</strong>
           <small>Total reviews</small>
         </div>
+        <div class="social-stat">
+          <strong id="socialMovieRank">—</strong>
+          <small id="socialMovieRankLabel">MovieBox rank</small>
+        </div>
       </div>
+    </div>
+    <div class="social-movie-actions">
+      <button class="button button--outline" id="toggleMyList" type="button"><svg class="icon icon--small"><use href="#icon-plus"/></svg><span>Add to my ranked list</span></button>
+      <button class="button button--outline" id="shareMovie" type="button"><svg class="icon icon--small"><use href="#icon-send"/></svg>Share movie</button>
     </div>
   </section>
 
@@ -100,5 +101,54 @@
     <p class="composer__notice" id="postNotice" role="status" hidden></p>
   </section>
 </div>
+
+<!-- Rankings are always visible so the page has useful content before a movie is chosen. -->
+<div class="social-rankings">
+  <section class="card social-ranking-panel">
+    <div class="social-section-heading">
+      <div><h2>Top ranked on MovieBox</h2><p>Weighted by member ratings, so a single 5-star review cannot top the chart.</p></div>
+    </div>
+    <ol class="ranking-list" id="communityRankings"></ol>
+    <div class="social-list-empty" id="communityRankingsEmpty">
+      <svg class="icon"><use href="#icon-star"/></svg>
+      <strong>No rankings yet</strong>
+      <span>Rate a movie to start the leaderboard.</span>
+    </div>
+  </section>
+
+  <section class="card social-ranking-panel">
+    <div class="social-section-heading social-section-heading--split">
+      <div><h2 id="myListTitle">My top movies</h2><p>Your personal ranked list. Use the arrows to reorder.</p></div>
+      <button class="button button--outline" id="shareMyList" type="button"><svg class="icon icon--small"><use href="#icon-send"/></svg>Share list</button>
+    </div>
+    <ol class="ranking-list" id="myRankedList"></ol>
+    <div class="social-list-empty" id="myRankedListEmpty">
+      <svg class="icon"><use href="#icon-plus"/></svg>
+      <strong>Your list is empty</strong>
+      <span>Open a movie and choose “Add to my ranked list”.</span>
+    </div>
+    <div class="ranking-share-status" id="myListShareStatus" hidden>
+      <svg class="icon icon--small"><use href="#icon-globe"/></svg>
+      <span>Anyone with the link can view this list.</span>
+      <button type="button" id="stopSharingList">Stop sharing</button>
+    </div>
+    <p class="social-status" id="myListStatus" role="status"></p>
+  </section>
+</div>
+
+<!-- One share dialog serves both movies and ranked lists. -->
+<dialog class="share-dialog" id="shareDialog" aria-labelledby="shareDialogTitle">
+  <form method="dialog" class="share-dialog__inner">
+    <div class="share-dialog__header">
+      <div><h2 id="shareDialogTitle">Share</h2><p id="shareDialogSubtitle"></p></div>
+      <button class="icon-button" value="close" aria-label="Close share dialog">✕</button>
+    </div>
+    <div class="share-link">
+      <input id="shareLinkInput" type="text" readonly aria-label="Share link">
+      <button class="button button--primary" id="copyShareLink" type="button">Copy link</button>
+    </div>
+    <p class="social-status" id="shareDialogStatus" role="status"></p>
+  </form>
+</dialog>
 {% endblock %}
 {% block scripts %}<script src="/static/js/social.js" defer></script>{% endblock %}

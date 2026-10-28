@@ -38,3 +38,9 @@ Keep new API and page routes above the final 404/error handlers in `server.js`.
 The Socials page now starts with TMDB-backed movie selection. Selecting a result calls `POST /api/social/movies/resolve`; Express validates the TMDB ID and upserts that movie into `social_movie`. The review page then loads aggregate MovieBox ratings, the signed-in user's reviews, and other users' public reviews from MySQL. Posting a review uses `POST /api/social/movies/:id/reviews`.
 
 The Socials tables are created with `CREATE TABLE IF NOT EXISTS` when the Socials API is first used. Socials API requests are protected by the existing JWT middleware, so the browser must have `movieboxToken` from a successful login. `TMDB_API_KEY` and the existing MySQL environment variables must also be configured in `.env`.
+
+## Social rankings + sharing v0.4
+
+- **Community rankings** - `GET /api/social/rankings` returns the MovieBox leaderboard. Each member's ratings for a movie are averaged into one vote, then movies are ordered by a weighted (Bayesian) average that pulls movies with few ratings toward the site-wide mean (`RANKING_MIN_RATERS`). The movie review page shows the movie's rank.
+- **My ranked list** - each member has one personal list (`social_ranked_list` / `social_ranked_list_item`). `GET /api/social/my-list` loads it and `PUT /api/social/my-list` saves the full order as `{ movieIds: [...] }` (max 25).
+- **Sharing** - `POST /api/social/my-list/share` with `{ enabled: true|false }` creates or revokes a public link at `/lists/:token`, which works without logging in and never shows the owner's email. Movies can be shared with a copyable `/social?movie=<tmdb id>` link.

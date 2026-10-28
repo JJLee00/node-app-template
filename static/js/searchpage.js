@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
       movie.description || 'No description available.';
 
     document.getElementById('reviewMovieLink').href =
-      `/social?movie=${encodeURIComponent(movie.title)}`;
+      movie.id ? `/social?movie=${encodeURIComponent(movie.id)}` : '/social';
 
     const gallery = document.getElementById('detailGallery');
 

@@ -6,6 +6,7 @@ const mysql = require('mysql2/promise');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const crypto = require('crypto');
 const nunjucks = require('nunjucks');
 
 const app = express();
@@ -505,6 +506,138 @@ async function ensureSocialTables(connection) {
         ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  // Each member keeps one personal ranked list. share_token is only set while
+  // the list is shared, so a revoked link stops working immediately.
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS social_ranked_list (
+      id INT NOT NULL AUTO_INCREMENT,
+      owner_email VARCHAR(255) NOT NULL,
+      title VARCHAR(100) NOT NULL DEFAULT 'My top movies',
+      share_token CHAR(32) NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uq_social_ranked_list_owner (owner_email),
+      UNIQUE KEY uq_social_ranked_list_token (share_token)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS social_ranked_list_item (
+      list_id INT NOT NULL,
+      social_movie_id INT NOT NULL,
+      position SMALLINT NOT NULL,
+      PRIMARY KEY (list_id, social_movie_id),
+      KEY idx_social_ranked_list_item_position (list_id, position),
+      CONSTRAINT fk_social_ranked_list_item_list
+        FOREIGN KEY (list_id) REFERENCES social_ranked_list(id)
+        ON DELETE CASCADE,
+      CONSTRAINT fk_social_ranked_list_item_movie
+        FOREIGN KEY (social_movie_id) REFERENCES social_movie(id)
+        ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+}
+
+// Weighted ("Bayesian") average: movies with only a couple of ratings are
+// pulled toward the site-wide mean so one 5-star review cannot top the chart.
+const RANKING_MIN_RATERS = 3;
+
+async function getCommunityRankings(connection) {
+  // Average each member's ratings per movie first, so posting several reviews
+  // for the same movie does not count as several votes.
+  const [rows] = await connection.execute(
+    `SELECT m.id, m.tmdb_id, m.title,
+            DATE_FORMAT(m.release_date, '%Y-%m-%d') AS release_date, m.poster_url,
+            COUNT(*) AS rater_count, AVG(per_user.rating) AS average_rating,
+            SUM(per_user.rating) AS rating_total
+     FROM (
+       SELECT social_movie_id, reviewer_email, AVG(rating) AS rating
+       FROM social_review
+       GROUP BY social_movie_id, reviewer_email
+     ) AS per_user
+     JOIN social_movie m ON m.id = per_user.social_movie_id
+     GROUP BY m.id, m.tmdb_id, m.title, m.release_date, m.poster_url`
+  );
+
+  const totalVotes = rows.reduce((sum, row) => sum + Number(row.rater_count), 0);
+  const totalRating = rows.reduce((sum, row) => sum + Number(row.rating_total), 0);
+  const siteMean = totalVotes ? totalRating / totalVotes : 0;
+
+  return rows
+    .map(row => {
+      const votes = Number(row.rater_count);
+      const average = Number(row.average_rating);
+      const score = (votes / (votes + RANKING_MIN_RATERS)) * average +
+        (RANKING_MIN_RATERS / (votes + RANKING_MIN_RATERS)) * siteMean;
+
+      return {
+        id: row.id,
+        tmdbId: row.tmdb_id,
+        title: row.title,
+        releaseDate: row.release_date,
+        poster: row.poster_url,
+        raterCount: votes,
+        averageRating: Math.round(average * 100) / 100,
+        score: Math.round(score * 1000) / 1000
+      };
+    })
+    .sort((a, b) =>
+      b.score - a.score ||
+      b.raterCount - a.raterCount ||
+      a.title.localeCompare(b.title)
+    )
+    .map((movie, index) => ({ rank: index + 1, ...movie }));
+}
+
+async function getRankedList(connection, where, params) {
+  const [lists] = await connection.execute(
+    `SELECT id, owner_email, title, share_token, updated_at
+     FROM social_ranked_list WHERE ${where}`,
+    params
+  );
+  if (!lists.length) return null;
+
+  const list = lists[0];
+  const [items] = await connection.execute(
+    `SELECT m.id, m.tmdb_id, m.title,
+            DATE_FORMAT(m.release_date, '%Y-%m-%d') AS release_date, m.poster_url
+     FROM social_ranked_list_item i
+     JOIN social_movie m ON m.id = i.social_movie_id
+     WHERE i.list_id = ?
+     ORDER BY i.position`,
+    [list.id]
+  );
+
+  return {
+    id: list.id,
+    ownerEmail: list.owner_email,
+    title: list.title,
+    shareToken: list.share_token,
+    updatedAt: list.updated_at,
+    items: items.map((movie, index) => ({
+      rank: index + 1,
+      id: movie.id,
+      tmdbId: movie.tmdb_id,
+      title: movie.title,
+      releaseDate: movie.release_date,
+      poster: movie.poster_url
+    }))
+  };
+}
+
+function shareUrlFor(req, token) {
+  return token ? `${req.protocol}://${req.get('host')}/lists/${token}` : null;
+}
+
+function serializeMyList(req, list) {
+  return {
+    title: list ? list.title : 'My top movies',
+    shared: Boolean(list && list.shareToken),
+    shareUrl: list ? shareUrlFor(req, list.shareToken) : null,
+    items: list ? list.items : []
+  };
 }
 
 async function fetchTmdbMovie(movieId) {
@@ -638,10 +771,23 @@ app.get('/api/social/movies/:id/reviews', authenticateToken, async (req, res) =>
       };
     });
 
+    const rankings = await getCommunityRankings(connection);
+    const ranking = rankings.find(movie => movie.id === movieId);
+
+    const [listRows] = await connection.execute(
+      `SELECT 1 FROM social_ranked_list l
+       JOIN social_ranked_list_item i ON i.list_id = l.id
+       WHERE l.owner_email = ? AND i.social_movie_id = ?`,
+      [req.user.email, movieId]
+    );
+
     res.json({
       summary: {
         reviewCount: Number(summaryRows[0].review_count || 0),
-        averageRating: Number(summaryRows[0].average_rating || 0)
+        averageRating: Number(summaryRows[0].average_rating || 0),
+        rank: ranking ? ranking.rank : null,
+        rankedMovieCount: rankings.length,
+        inMyList: listRows.length > 0
       },
       myReviews: myRows.map(review => ({
         id: review.id,
@@ -696,6 +842,160 @@ app.post('/api/social/movies/:id/reviews', authenticateToken, async (req, res) =
   } catch (error) {
     console.error('Post social review error:', error);
     res.status(500).json({ message: 'Unable to post review.' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// --------------------------------
+// SOCIALS: RANKINGS + SHARING
+// --------------------------------
+
+const MAX_RANKED_LIST_ITEMS = 25;
+
+// Community leaderboard built from every member's star ratings.
+app.get('/api/social/rankings', authenticateToken, async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 50);
+
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    const rankings = await getCommunityRankings(connection);
+    res.json({
+      minimumRaters: RANKING_MIN_RATERS,
+      totalRanked: rankings.length,
+      rankings: rankings.slice(0, limit)
+    });
+  } catch (error) {
+    console.error('Social rankings error:', error);
+    res.status(500).json({ message: 'Unable to load rankings.' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+app.get('/api/social/my-list', authenticateToken, async (req, res) => {
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    const list = await getRankedList(connection, 'owner_email = ?', [req.user.email]);
+    res.json({ list: serializeMyList(req, list) });
+  } catch (error) {
+    console.error('Load ranked list error:', error);
+    res.status(500).json({ message: 'Unable to load your ranked list.' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Replace the member's ranked list with the given order of Socials movie IDs.
+// Sending the whole order keeps add, remove, and reorder in one simple call.
+app.put('/api/social/my-list', authenticateToken, async (req, res) => {
+  const title = String(req.body.title ?? 'My top movies').trim() || 'My top movies';
+  const movieIds = Array.isArray(req.body.movieIds) ? req.body.movieIds.map(Number) : null;
+
+  if (!movieIds || movieIds.some(id => !Number.isInteger(id) || id <= 0)) {
+    return res.status(400).json({ message: 'movieIds must be a list of Socials movie IDs.' });
+  }
+  if (new Set(movieIds).size !== movieIds.length) {
+    return res.status(400).json({ message: 'A movie can only appear once in your list.' });
+  }
+  if (movieIds.length > MAX_RANKED_LIST_ITEMS) {
+    return res.status(400).json({ message: `Ranked lists can hold up to ${MAX_RANKED_LIST_ITEMS} movies.` });
+  }
+  if (title.length > 100) {
+    return res.status(400).json({ message: 'List title must be 100 characters or fewer.' });
+  }
+
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    if (movieIds.length) {
+      const [found] = await connection.query(
+        'SELECT id FROM social_movie WHERE id IN (?)', [movieIds]
+      );
+      if (found.length !== movieIds.length) {
+        return res.status(404).json({ message: 'One or more movies were not found in Socials.' });
+      }
+    }
+
+    await connection.beginTransaction();
+
+    await connection.execute(
+      `INSERT INTO social_ranked_list (owner_email, title) VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE title = VALUES(title), updated_at = CURRENT_TIMESTAMP`,
+      [req.user.email, title]
+    );
+    const [lists] = await connection.execute(
+      'SELECT id FROM social_ranked_list WHERE owner_email = ?', [req.user.email]
+    );
+    const listId = lists[0].id;
+
+    await connection.execute('DELETE FROM social_ranked_list_item WHERE list_id = ?', [listId]);
+    if (movieIds.length) {
+      await connection.query(
+        'INSERT INTO social_ranked_list_item (list_id, social_movie_id, position) VALUES ?',
+        [movieIds.map((movieId, index) => [listId, movieId, index + 1])]
+      );
+    }
+
+    await connection.commit();
+
+    const list = await getRankedList(connection, 'id = ?', [listId]);
+    res.json({ message: 'Your ranked list was saved.', list: serializeMyList(req, list) });
+  } catch (error) {
+    if (connection) await connection.rollback().catch(() => {});
+    console.error('Save ranked list error:', error);
+    res.status(500).json({ message: 'Unable to save your ranked list.' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Turn the public share link for the member's ranked list on or off.
+app.post('/api/social/my-list/share', authenticateToken, async (req, res) => {
+  const enabled = req.body.enabled !== false;
+
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    await connection.execute(
+      `INSERT INTO social_ranked_list (owner_email) VALUES (?)
+       ON DUPLICATE KEY UPDATE owner_email = owner_email`,
+      [req.user.email]
+    );
+
+    if (enabled) {
+      // Keep an existing token so links that were already sent keep working.
+      await connection.execute(
+        `UPDATE social_ranked_list
+         SET share_token = COALESCE(share_token, ?)
+         WHERE owner_email = ?`,
+        [crypto.randomBytes(16).toString('hex'), req.user.email]
+      );
+    } else {
+      await connection.execute(
+        'UPDATE social_ranked_list SET share_token = NULL WHERE owner_email = ?',
+        [req.user.email]
+      );
+    }
+
+    const list = await getRankedList(connection, 'owner_email = ?', [req.user.email]);
+    res.json({
+      message: enabled ? 'Your list is now shared.' : 'Your list is no longer shared.',
+      list: serializeMyList(req, list)
+    });
+  } catch (error) {
+    console.error('Share ranked list error:', error);
+    res.status(500).json({ message: 'Unable to update sharing for your list.' });
   } finally {
     if (connection) await connection.end();
   }
@@ -769,6 +1069,34 @@ app.get('/theatres', (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+// Public, read-only view of a shared ranked list. No login is required so the
+// link works when posted outside MovieBox; the owner's email is never shown.
+app.get('/lists/:token', async (req, res, next) => {
+  if (!/^[a-f0-9]{32}$/.test(req.params.token)) {
+    return res.status(404).render('shared_list.html', { list: null });
+  }
+
+  let connection;
+  try {
+    connection = await createConnection();
+    await ensureSocialTables(connection);
+
+    const list = await getRankedList(connection, 'share_token = ?', [req.params.token]);
+    res.status(list ? 200 : 404).render('shared_list.html', {
+      list: list && {
+        title: list.title,
+        updatedAt: list.updatedAt,
+        items: list.items
+      },
+      shareUrl: list ? shareUrlFor(req, list.shareToken) : null
+    });
+  } catch (error) {
+    next(error);
+  } finally {
+    if (connection) await connection.end();
   }
 });
 
