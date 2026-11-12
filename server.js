@@ -1062,6 +1062,114 @@ app.get('/social', (req, res, next) => {
   }
 });
 
+const geocodeCache = new Map();
+let lastGeocodeRequest = 0;
+app.get('/api/theatres/geocode', async (req, res) => {
+  const city = String(req.query.city || '').trim();
+  const state = String(req.query.state || '').trim();
+  if (!/^[a-zA-Z .'-]{2,80}$/.test(city) || !/^[a-zA-Z .'-]{2,40}$/.test(state)) {
+    return res.status(400).json({ error: 'Enter a valid US city and state (e.g. Tempe, AZ).' });
+  }
+  const key = `${city},${state}`.toLowerCase();
+  const cached = geocodeCache.get(key);
+  if (cached) return res.json(cached);
+  // Nominatim public service: max 1 request/second; identify the application.
+  if (Date.now() - lastGeocodeRequest < 1100) {
+    return res.status(429).json({ error: 'Please wait a moment before searching another location.' });
+  }
+  lastGeocodeRequest = Date.now();
+  try {
+    const url = new URL('https://nominatim.openstreetmap.org/search');
+    url.searchParams.set('q', `${city}, ${state}, USA`);
+    url.searchParams.set('format', 'json');
+    url.searchParams.set('limit', '1');
+    url.searchParams.set('countrycodes', 'us');
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'MovieBoxStudentProject/1.0 (local educational prototype)', 'Accept-Language': 'en' },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) throw new Error(`Location lookup returned ${response.status}`);
+    const places = await response.json();
+    if (!places.length) return res.status(404).json({ error: 'City/state not found. Check spelling and try again.' });
+    const coordinates = { latitude: Number(places[0].lat), longitude: Number(places[0].lon) };
+    geocodeCache.set(key, coordinates);
+    return res.json(coordinates);
+  } catch (error) {
+    console.error('Geocoding error:', error.message);
+    return res.status(502).json({ error: 'Location lookup unavailable. Try Use my location.' });
+  }
+});
+
+
+const movieGluCache = new Map();
+async function movieGluRequest(resource, params, lat, lng, deviceDatetime) {
+  const required = ['MOVIEGLU_CLIENT', 'MOVIEGLU_API_KEY', 'MOVIEGLU_AUTHORIZATION'];
+  if (required.some(key => !process.env[key])) {
+    const err = new Error('MovieGlu is not configured. Add credentials to your .env file.');
+    err.status = 503;
+    throw err;
+  }
+  const base = process.env.MOVIEGLU_BASE_URL || 'https://api-gate2.movieglu.com/';
+  const url = new URL(`${resource}/`, base.endsWith('/') ? base : `${base}/`);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
+  const headers = {
+    client: process.env.MOVIEGLU_CLIENT,
+    'x-api-key': process.env.MOVIEGLU_API_KEY,
+    authorization: process.env.MOVIEGLU_AUTHORIZATION,
+    territory: process.env.MOVIEGLU_TERRITORY || 'XX',
+    'api-version': process.env.MOVIEGLU_API_VERSION || 'v201',
+    geolocation: `${lat};${lng}`,
+    'device-datetime': deviceDatetime
+  };
+  const cacheKey = `${url.toString()}|${headers.territory}|${headers.geolocation}|${deviceDatetime.slice(0, 10)}`;
+  const cached = movieGluCache.get(cacheKey);
+  if (cached && cached.expires > Date.now()) return cached.value;
+  const response = await fetch(url, { headers, signal: AbortSignal.timeout(12000) });
+  if (!response.ok) {
+    const err = new Error(`MovieGlu returned ${response.status}${response.headers.get('mg-message') ? ': ' + response.headers.get('mg-message') : ''}`);
+    err.status = response.status === 429 ? 429 : 502;
+    throw err;
+  }
+  if (response.status === 204) return {};
+  const value = await response.json();
+  if (value.status?.state === 'Error') throw new Error(value.status.message || 'MovieGlu request failed');
+  // A short cache conserves evaluation requests; do not cache cinema/showtime responses.
+  if (resource === 'filmLiveSearch') movieGluCache.set(cacheKey, { value, expires: Date.now() + 300000 });
+  return value;
+}
+
+app.post('/api/theatres/search', async (req, res) => {
+  try {
+    const { latitude, longitude, date, title, deviceDatetime } = req.body || {};
+    const lat = Number(latitude), lng = Number(longitude);
+    if (latitude == null || longitude == null || !Number.isFinite(lat) || !Number.isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+      return res.status(400).json({ error: 'Provide valid latitude and longitude.' });
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || Number.isNaN(Date.parse(`${date}T12:00:00Z`))) {
+      return res.status(400).json({ error: 'Provide a valid date (YYYY-MM-DD).' });
+    }
+    if (typeof deviceDatetime !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?$/.test(deviceDatetime)) {
+      return res.status(400).json({ error: 'Provide device local date and time.' });
+    }
+    const name = typeof title === 'string' ? title.trim() : '';
+    if (name.length > 100) return res.status(400).json({ error: 'Movie title is too long.' });
+    let result;
+    if (name) {
+      const found = await movieGluRequest('filmLiveSearch', { query: name, n: 5 }, lat, lng, deviceDatetime);
+      const film = (found.films || []).find(f => f.film_name?.toLowerCase() === name.toLowerCase()) || (found.films || [])[0];
+      if (!film) return res.json({ cinemas: [], films: [], message: 'No matching movies found.' });
+      result = await movieGluRequest('filmShowTimes', { film_id: film.film_id, date, n: 20 }, lat, lng, deviceDatetime);
+      return res.json({ cinemas: result.cinemas || [], films: [film], territory: process.env.MOVIEGLU_TERRITORY || 'XX' });
+    }
+    result = await movieGluRequest('cinemasNearby', { n: 15 }, lat, lng, deviceDatetime);
+    return res.json({ cinemas: result.cinemas || [], films: [], territory: process.env.MOVIEGLU_TERRITORY || 'XX', message: 'Enter a movie title to view its showtimes.' });
+  } catch (err) {
+    console.error('MovieGlu search:', err.message);
+    return res.status(err.status || 502).json({ error: err.message });
+  }
+});
+
+
 app.get('/theatres', (req, res, next) => {
   try {
     res.render('theatres.html', {
